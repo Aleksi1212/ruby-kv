@@ -16,7 +16,7 @@ module RubyKV
       String: 3
     }.freeze
 
-    DATA_TYPE_LOOKUP = {
+    DATA_TYPE_LOOK_UP = {
       DATA_TYPE[:Integer] => :Integer,
       DATA_TYPE[:Float] => :Float,
       DATA_TYPE[:String] => :String
@@ -120,7 +120,7 @@ module RubyKV
     end
 
     def type(attribute)
-      attribute.class.to_s.to.sym
+      attribute.class.to_s.to_sym
     end
   end
 end

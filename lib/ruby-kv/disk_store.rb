@@ -39,6 +39,10 @@ module RubyKV
       @db_fh.flush
     end
 
+    def incr_write_pos(pos)
+        @write_pos += pos
+    end
+
     def key_struct(write_pos, log_size, key)
       { write_pos: write_pos, log_size: log_size, key: key }
     end
