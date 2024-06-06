@@ -8,6 +8,7 @@ GEM
     parser (3.3.2.0)
       ast (~> 2.4.1)
       racc
+    prism (0.29.0)
     racc (1.8.0)
     rainbow (3.1.1)
     regexp_parser (2.9.2)
@@ -26,7 +27,12 @@ GEM
       unicode-display_width (>= 2.4.0, < 3.0)
     rubocop-ast (1.31.3)
       parser (>= 3.3.1.0)
+    ruby-lsp (0.17.2)
+      language_server-protocol (~> 3.17.0)
+      prism (>= 0.29.0, < 0.30)
+      sorbet-runtime (>= 0.5.10782)
     ruby-progressbar (1.13.0)
+    sorbet-runtime (0.5.11414)
     strscan (3.1.0)
     unicode-display_width (2.5.0)
     zlib (3.1.1)
@@ -36,6 +42,7 @@ PLATFORMS
 
 DEPENDENCIES
   rubocop
+  ruby-lsp
   zlib
 
 BUNDLED WITH
