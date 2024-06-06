@@ -1,2 +1,2 @@
 .vscode
-ruby_kv.db
+*.db
