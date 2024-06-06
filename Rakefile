@@ -3,5 +3,5 @@
 task default: :run
 
 task :run do
-  ruby 'lib/ruby-kv.rb'
+  ruby 'lib/main.rb'
 end
