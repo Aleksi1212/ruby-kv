@@ -10,10 +10,14 @@ if args.empty?
 else
   db_store = RubyKV::DiskStore.new
 
-  if args[0] == 'put'
-    db_store.put(args[1], args[2])
-    puts 'Data added succesfully'
-  elsif args[0] == 'get'
+  case args[0]
+  when 'put'
+    puts db_store.put(args[1], args[2])
+  when 'get'
     puts db_store.get(args[1])
+  when 'del'
+    puts db_store.delete(args[1])
+  when 'keys'
+    puts db_store.keys
   end
 end
