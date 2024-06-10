@@ -47,7 +47,7 @@ module RubyKV
       incr_write_pos(log_size)
       'OK'
     rescue StandardError => e
-      e.message
+      "ERROR: #{e.message}"
     end
 
     def delete(key)
