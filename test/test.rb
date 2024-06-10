@@ -11,7 +11,12 @@ $tests = {
     test2: %w[test2 data2],
     test3: %w[test3 data3],
     test4: %w[test4 data4],
-    test5: %w[test5 data5]
+    test5: %w[test5 data5],
+    test6: %w[test6 data6],
+    test7: %w[test7 data7],
+    test8: %w[test8 data8],
+    test9: %w[test9 data9],
+    test10: %w[test10 data10]
   },
   GET_AND_DEL: %w[
     test1
@@ -19,6 +24,11 @@ $tests = {
     test3
     test4
     test5
+    test6
+    test7
+    test8
+    test9
+    test10
   ]
 }
 
