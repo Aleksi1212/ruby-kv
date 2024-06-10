@@ -98,7 +98,7 @@ module RubyKV
       when :String
         attribute.encode('utf-8')
       else
-        raise StandardError, 'Invalid attribute_type for pack'
+        raise StandardError, "Invalid attribute_type: #{attribute_type} for pack"
       end
     end
 
@@ -109,7 +109,7 @@ module RubyKV
       when :String
         attribute
       else
-        raise StandardError, 'Invalid attribute_type for unpack'
+        raise StandardError, "Invalid attribute_type: #{attribute_type} for unpack"
       end
     end
 
