@@ -13,8 +13,19 @@ module RubyKV
       init_key_dir
     end
 
+    def wipe
+      @key_dir = {}
+      @write_pos = 0
+      File.open(@db_file, 'w')
+      'OK'
+    rescue StandardError => e
+      "ERROR: #{e.message}"
+    end
+
     def keys
       @key_dir.keys
+    rescue StandardError => e
+      "ERROR: #{e.message}"
     end
 
     def get(key)
@@ -43,17 +54,20 @@ module RubyKV
       key_struct = @key_dir[key]
       return if key_struct.nil?
 
-      @db_fh.seek(0)
-      db_data = @db_fh.read
+      updated_key_dir = {}
 
-      db_data.slice!(key_struct[:write_pos]..key_struct[:write_pos] + key_struct[:log_size] - 1)
-
-      File.open(@db_file, 'w') do |file|
-        file.write(db_data)
-        file.flush
+      @key_dir.each_key do |dir_key|
+        updated_key_dir[dir_key] = get(dir_key) if dir_key != key
       end
 
-      @key_dir = recalculate_write_positions(key)
+      error = wipe
+      if error == 'OK'
+        updated_key_dir.each do |dir_key, dir_value|
+          put(dir_key, dir_value)
+        end
+      else
+        error
+      end
 
       'OK'
     rescue StandardError => e
@@ -94,28 +108,6 @@ module RubyKV
         @key_dir[key] = key_struct(@write_pos, log_size, key)
         incr_write_pos(log_size)
       end
-    end
-
-    def recalculate_write_positions(key)
-      modified_arr = []
-      modified_hash = {}
-
-      @key_dir.each do |dir_key, dir_val|
-        modified_arr.push(dir_val) if dir_key != key
-      end
-
-      (0..modified_arr.length - 1).each do |index|
-        if index.zero?
-          modified_arr[index][:write_pos] = 0
-        else
-          modified_arr[index][:write_pos] = modified_arr[index - 1][:write_pos] + modified_arr[index - 1][:log_size]
-        end
-
-        @write_pos = modified_arr[index][:write_pos]
-        modified_hash[modified_arr[index][:key]] = modified_arr[index]
-      end
-
-      modified_hash
     end
   end
 end
