@@ -19,5 +19,7 @@ else
     puts db_store.delete(args[1])
   when 'keys'
     puts db_store.keys
+  when 'wipe'
+    puts db_store.wipe
   end
 end
