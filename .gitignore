@@ -1,2 +1,5 @@
 .vscode
 *.db
+
+test/*
+!test/test.rb
