@@ -2,8 +2,8 @@
 
 task default: :run
 
-task :run do
-  ruby 'lib/main.rb keys'
+task :run, [:arg1, :arg2] do |t, args|
+  ruby "test/manual_test.rb #{args[:arg1]} #{args[:arg2]}"
 end
 
 task :test do

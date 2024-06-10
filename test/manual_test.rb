@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require_relative 'ruby-kv/serializer'
-require_relative 'ruby-kv/disk_store'
+require_relative '../lib/ruby-kv/serializer'
+require_relative '../lib/ruby-kv/disk_store'
 
 args = ARGV
 
@@ -12,7 +12,8 @@ else
 
   case args[0]
   when 'put'
-    puts db_store.put(args[1], args[2])
+    kv = args[1].split(':')
+    puts db_store.put(kv[0], kv[1])
   when 'get'
     puts db_store.get(args[1])
   when 'del'

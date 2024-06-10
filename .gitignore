@@ -1,5 +1,4 @@
 .vscode
 *.db
 
-test/*
-!test/test.rb
+test/other/*
