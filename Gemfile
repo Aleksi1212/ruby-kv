@@ -6,4 +6,6 @@ group :development do
   gem 'rubocop'
   gem 'ruby-lsp'
 end
+gem 'json'
+gem 'json-schema'
 gem 'zlib'
