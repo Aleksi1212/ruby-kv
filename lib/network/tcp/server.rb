@@ -4,8 +4,7 @@ require 'socket'
 require 'json'
 require 'json-schema'
 
-require_relative '../../ruby-kv/serializer'
-require_relative '../../ruby-kv/disk_store'
+require_relative '../../ruby_kv'
 
 PORT = 2000
 
@@ -39,7 +38,7 @@ end
 loop do
   Thread.start(server.accept) do |client|
     client_address = client.peeraddr[3]
-    puts "New connection from: #{client_address}"
+    puts "New connection from #{client_address}"
     client.puts 'Connected to server'
 
     db_store = RubyKV::DiskStore.new
@@ -60,19 +59,19 @@ loop do
 
         case method
         when 'PUT'
-          puts "Client: #{client_address}, added data to kv_store. K: #{key}, V: #{value}"
+          puts "Client #{client_address}, added data to kv_store. K: #{key}, V: #{value}"
           client.puts db_store.put(key, value)
         when 'GET'
-          puts "Client: #{client_address}, retrieved #{key} from kv_store."
+          puts "Client #{client_address}, retrieved #{key} from kv_store."
           client.puts db_store.get(key)
         when 'DEL'
-          puts "Client: #{client_address}, deleted #{key} from kv_store."
+          puts "Client #{client_address}, deleted #{key} from kv_store."
           client.puts db_store.delete(key)
         when 'KEYS'
-          puts "Client: #{client_address}, listed keys from kv_store."
+          puts "Client #{client_address}, listed keys from kv_store."
           client.puts db_store.keys
         when 'WIPE'
-          puts "Client: #{client_address}, deleted all data from kv_store."
+          puts "Client #{client_address}, deleted all data from kv_store."
           client.puts db_store.wipe
         else
           client.puts "ERR: invalid method: #{method}"
@@ -81,5 +80,6 @@ loop do
     end
     client.puts 'Disconnected from server'
     client.close
+    puts "Connection to #{client_address} closed"
   end
 end
