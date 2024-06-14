@@ -10,4 +10,5 @@ group :development do
 end
 gem 'json'
 gem 'json-schema'
+gem 'openssl'
 gem 'zlib'
