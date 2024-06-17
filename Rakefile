@@ -9,3 +9,7 @@ end
 task :run_tcp_server do
   ruby 'lib/network/tcp/server.rb'
 end
+
+task :run_http_server do
+  ruby 'lib/network/http/server.rb'
+end
