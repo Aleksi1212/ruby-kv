@@ -13,8 +13,6 @@ HOST = Socket.gethostname
 
 tcp_server = TCPServer.open(PORT)
 
-tcp_server.setsockopt(:SOCKET, :REUSEADDR, true)
-tcp_server.setsockopt(Socket::SOL_SOCKET, Socket::SO_REUSEADDR, true)
 tcp_server.setsockopt(Socket::Option.bool(:INET, :SOCKET, :REUSEADDR, true))
 tcp_server.setsockopt(Socket::Option.bool(:INET, :SOCKET, :KEEPALIVE, true))
 
