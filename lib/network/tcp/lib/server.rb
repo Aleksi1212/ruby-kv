@@ -3,9 +3,10 @@
 require_relative '../../../ruby_kv'
 require_relative 'json'
 
-DB_STORE = RubyKV::DiskStore.new
 
 def db_operations(input_data, client_address)
+  db_store = RubyKV::DiskStore.new
+
   method = input_data['method'].upcase
   key = input_data['key']
   value = input_data['value']
@@ -13,19 +14,19 @@ def db_operations(input_data, client_address)
   case method
   when 'PUT'
     puts "Client #{client_address}, added data to kv_store. K: #{key}, V: #{value}"
-    DB_STORE.put(key, value)
+    db_store.put(key, value)
   when 'GET'
     puts "Client #{client_address}, retrieved #{key} from kv_store."
-    DB_STORE.get(key)
+    db_store.get(key)
   when 'DEL'
     puts "Client #{client_address}, deleted #{key} from kv_store."
-    DB_STORE.delete(key)
+    db_store.delete(key)
   when 'KEYS'
     puts "Client #{client_address}, listed keys from kv_store."
-    DB_STORE.keys
+    db_store.keys
   when 'WIPE'
     puts "Client #{client_address}, deleted all data from kv_store."
-    DB_STORE.wipe
+    db_store.wipe
   else
     "ERR: invalid method: #{method}"
   end
