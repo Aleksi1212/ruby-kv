@@ -8,15 +8,15 @@ require_relative '../../openssl/generate_certificate'
 
 Thread.abort_on_exception = true
 
-PORT = 6969
+TCP_PORT = 4443
 HOST = Socket.gethostname
 
-tcp_server = TCPServer.open(PORT)
+tcp_server = TCPServer.open(TCP_PORT)
 
 tcp_server.setsockopt(Socket::Option.bool(:INET, :SOCKET, :REUSEADDR, true))
 tcp_server.setsockopt(Socket::Option.bool(:INET, :SOCKET, :KEEPALIVE, true))
 
-puts "Server listening on port: #{PORT}"
+puts "TCP server started on port: #{TCP_PORT}"
 
 ssl_context = create_ssl_context(HOST)
 if ssl_context[:error]

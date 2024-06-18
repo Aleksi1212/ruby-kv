@@ -5,7 +5,9 @@ require 'sinatra/namespace'
 
 require_relative '../../ruby_kv'
 
-set :port, 8080
+HTTP_PORT = 8080
+
+set :port, HTTP_PORT
 
 DB_STORE = RubyKV::DiskStore.new
 
@@ -37,3 +39,5 @@ namespace '/ruby_kv/api/v1' do
     { data: DB_STORE.wipe }.to_json
   end
 end
+
+puts "HTTP server started on port: #{HTTP_PORT}"
