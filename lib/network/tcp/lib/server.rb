@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
 require_relative '../../../ruby_kv'
+require_relative '../../sql/users'
 require_relative 'json'
 
-
-def db_operations(input_data, client_address)
-  db_store = RubyKV::DiskStore.new
+def kv_operations(input_data, client_address)
+  kv_store = RubyKV::DiskStore.new
 
   method = input_data['method'].upcase
   key = input_data['key']
@@ -14,28 +14,31 @@ def db_operations(input_data, client_address)
   case method
   when 'PUT'
     puts "Client #{client_address}, added data to kv_store. K: #{key}, V: #{value}"
-    db_store.put(key, value)
+    kv_store.put(key, value)
   when 'GET'
     puts "Client #{client_address}, retrieved #{key} from kv_store."
-    db_store.get(key)
+    kv_store.get(key)
   when 'DEL'
     puts "Client #{client_address}, deleted #{key} from kv_store."
-    db_store.delete(key)
+    kv_store.delete(key)
   when 'KEYS'
     puts "Client #{client_address}, listed keys from kv_store."
-    db_store.keys
+    kv_store.keys
   when 'WIPE'
     puts "Client #{client_address}, deleted all data from kv_store."
-    db_store.wipe
+    kv_store.wipe
   else
     "ERR: invalid method: #{method}"
   end
 end
 
+# rubocop:disable Metrics/BlockNesting,Lint/MissingCopEnableDirective
 def handle_client_connection(client)
-  client_address = client.peeraddr[3]
-  puts "New connection from #{client_address}. #{Time.now}"
+  puts "New connection from #{client.peeraddr[3]}. #{Time.now}"
   client.puts 'Connected to server'
+
+  users_db = Users.new
+  authenticated = false
 
   while (line = client.gets)
     line.chomp!
@@ -44,16 +47,28 @@ def handle_client_connection(client)
     if line.downcase == 'hello' || line.downcase == 'hi'
       client.puts 'Hi!'
     else
-      input = parse_json(line)
-      input_data = input[:data]
+      kv_input = parse_json(line, Schemas::KV)
+      auth_input = parse_json(line, Schemas::AUTH)
 
-      client.puts input_data if input[:error]
-      client.puts db_operations(input_data, client_address) unless input[:error]
+      kv_input_error, kv_input_data = kv_input.values_at(:error, :data)
+      auth_input_error, auth_input_data = auth_input.values_at(:error, :data)
+
+      client.puts "#{kv_input_data} | #{auth_input_data}" if kv_input_error && auth_input_error
+
+      if kv_input_error && !auth_input_error
+        authenticated = users_db.get_user(auth_input_data['user_name'], auth_input_data['password'])
+        client.puts authenticated ? 'Authenticated' : "User: #{auth_input_data['user_name']}. Not found."
+      end
+
+      if !kv_input_error && auth_input_error
+        client.puts kv_operations(kv_input_data, client.peeraddr[3]) if authenticated
+        client.puts 'Not authenticated' unless authenticated
+      end
     end
   end
   client.puts 'Disconnected from server'
   client.close
-  puts "Connection to #{client_address} closed"
+  puts "Connection to #{client.peeraddr[3]} closed"
 rescue Errno::ECONNRESET
   puts 'Connection was forcibly closed by client'
 rescue IOError, OpenSSL::SSL::SSLError
