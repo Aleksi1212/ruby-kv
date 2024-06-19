@@ -9,8 +9,10 @@ group :development do
 end
 gem 'json', '~> 2.7', '>= 2.7.2'
 gem 'json-schema', '~> 4.3'
+gem 'jwt', '~> 2.8', '>= 2.8.1'
 gem 'openssl', '~> 3.2'
 gem 'rackup', '~> 2.1'
 gem 'sinatra', '~> 4.0'
 gem 'sinatra-namespace', '~> 1.0'
+gem 'sqlite3', '~> 1.3', '>= 1.3.11'
 gem 'zlib', '~> 3.1', '>= 3.1.1'
