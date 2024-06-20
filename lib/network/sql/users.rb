@@ -1,33 +1,37 @@
 # frozen_string_literal: true
 
-require 'sqlite3'
+require 'sequel'
 
 class Users
   def initialize(db_name = 'users.db')
-    @db = SQLite3::Database.new(db_name)
-    @db.results_as_hash = true
+    @db = Sequel.sqlite(db_name)
 
-    @db.execute <<-SQL
-      CREATE TABLE IF NOT EXISTS users (
-        name TEXT NOT NULL UNIQUE,
-        password TEXT NOT NULL
-      );
-    SQL
+    @db.create_table? :users do
+      String :name, unique: true, null: false
+      String :password, null: false
+      Integer :admin, default: 0
+
+      constraint(:admin_values) { Sequel.lit('admin IN ( 0, 1 )') }
+    end
   end
 
-  def create_user(name, password)
-    @db.execute 'INSERT INTO users (name, password) VALUES (?, ?)', name, password
+  def create_user(name, password, admin = 0)
+    @db[:users].insert(name: name, password: password, admin: admin)
     'OK'
-  rescue SQLite3::ConstraintException
-    "User: #{name}. Already exists"
+  rescue Sequel::UniqueConstraintViolation
+    "User: #{name} already exists."
+  rescue Sequel::CheckConstraintViolation
+    'Admin value can only be 1 or 0'
   rescue StandardError => e
     e.message
   end
 
   def get_user(name, password)
-    results = @db.query 'SELECT * FROM users WHERE name=? AND password=?', name, password
-    !results.next.nil?
+    @db[:users].where(name: name).where(password: password).prepare(:first, :sa)
+    user_data = @db.call(:sa)
+    puts user_data
+    { found: !user_data.nil?, isAdmin: user_data[:admin] == 1 }
   rescue StandardError
-    false
+    { found: false, isAdmin: false }
   end
 end

@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+# rubocop:disable all
 
 require_relative '../../../ruby_kv'
 require_relative '../../sql/users'
@@ -32,13 +33,14 @@ def kv_operations(input_data, client_address)
   end
 end
 
-# rubocop:disable Metrics/BlockNesting,Lint/MissingCopEnableDirective
 def handle_client_connection(client)
   puts "New connection from #{client.peeraddr[3]}. #{Time.now}"
   client.puts 'Connected to server'
 
   users_db = Users.new
+  
   authenticated = false
+  admin = false
 
   while (line = client.gets)
     line.chomp!
@@ -56,8 +58,14 @@ def handle_client_connection(client)
       client.puts "#{kv_input_data} | #{auth_input_data}" if kv_input_error && auth_input_error
 
       if kv_input_error && !auth_input_error
-        authenticated = users_db.get_user(auth_input_data['user_name'], auth_input_data['password'])
-        client.puts authenticated ? 'Authenticated' : "User: #{auth_input_data['user_name']}. Not found."
+        user_name = auth_input_data['user_name']
+        password = auth_input_data['password']
+
+        authenticated, admin = users_db.get_user(user_name, password).values_at(:found, :isAdmin)
+
+        client.puts authenticated ?
+          "Authenticated as #{admin ? 'Admin' : 'User'}: #{user_name}" :
+          "Invalid password for User: #{user_name}"
       end
 
       if !kv_input_error && auth_input_error
