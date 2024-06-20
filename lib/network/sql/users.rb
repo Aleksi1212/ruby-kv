@@ -29,7 +29,7 @@ class Users
   def get_user(name, password)
     @db[:users].where(name: name).where(password: password).prepare(:first, :sa)
     user_data = @db.call(:sa)
-    puts user_data
+
     { found: !user_data.nil?, isAdmin: user_data[:admin] == 1 }
   rescue StandardError
     { found: false, isAdmin: false }
