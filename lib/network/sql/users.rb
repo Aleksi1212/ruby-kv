@@ -30,8 +30,12 @@ class Users
     @db[:users].where(name: name).where(password: password).prepare(:first, :sa)
     user_data = @db.call(:sa)
 
-    { found: !user_data.nil?, isAdmin: user_data[:admin] == 1 }
-  rescue StandardError
-    { found: false, isAdmin: false }
+    {
+      found: !user_data.nil?,
+      isAdmin: user_data[:admin] == 1,
+      error_message: user_data.nil? ? "User #{name} not found" : ''
+    }
+  rescue StandardError => e
+    { found: false, isAdmin: false, error_message: e.message }
   end
 end
