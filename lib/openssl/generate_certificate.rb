@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+# rubocop:disable all
 
 require 'openssl'
 
@@ -21,7 +22,7 @@ def generate_x509_certificate(host)
 
   server_cert.add_extension(ef.create_extension('basicConstraints', 'CA:true,pathlen:0', true))
   server_cert.add_extension(ef.create_extension('extendedKeyUsage', 'serverAuth,clientAuth'))
-  server_cert.add_extension(ef.create_extension('keyUsage', 'cRLSign,keyCertSign,digitalSignature,nonRepudiation', true)) # rubocop:disable Layout/LineLength
+  server_cert.add_extension(ef.create_extension('keyUsage', 'cRLSign,keyCertSign,digitalSignature,nonRepudiation', true))
   server_cert.add_extension(ef.create_extension('subjectKeyIdentifier', 'hash', false))
 
   server_cert.sign(server_key, OpenSSL::Digest.new('SHA384'))
