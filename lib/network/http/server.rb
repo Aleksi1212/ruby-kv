@@ -26,36 +26,6 @@ JWT_RSA_PUBLIC_KEY = JWT_RSA_PRIVATE_KEY.public_key
 SESSION_TOKEN_ALGO = 'RS256'
 ACCESS_TOKEN_ALGO = 'HS256'
 
-def base64_url_decode(str)
-  str = str.tr('-_', '+/')
-
-  padding = 4 - str.length % 4
-  padding = 0 if padding == 4
-  str += '=' * padding
-
-  Base64.decode64(str)
-end
-
-def split_token(token)
-  header, payload, signature = token.split('.')
-  [header, payload, signature]
-end
-
-def decode_jwt(header, payload)
-  decoded_header = base64_url_decode(header)
-  decoded_payload = base64_url_decode(payload)
-
-  header_hash = JSON.parse(decoded_header)
-  payload_hash = JSON.parse(decoded_payload)
-
-  [header_hash, payload_hash]
-end
-
-def verify_hs256_signature(data, signature, secret)
-  expected_signature = Base64.urlsafe_encode64(OpenSSL::HMAC.digest('sha256', secret, data)).gsub('=', '')
-  expected_signature == signature
-end
-
 class Authenticator
   def initialize(app)
     @app = app
@@ -64,10 +34,8 @@ class Authenticator
   def call(env)
     request = Rack::Request.new(env)
 
-    status, headers, response = @app.call(env)
-    puts response
 
-    return [status, headers, response] if request.path == '/ruby_kv/api/v1/authenticate'
+    return @app.call(env) if request.path == '/ruby_kv/api/v1/authenticate'
 
     headers_test = Hash[*env.select { |k, v| k.start_with? 'HTTP_' }
                             .collect { |k, v| [k.sub(/^HTTP_/, ''), v] }
@@ -78,24 +46,23 @@ class Authenticator
     session_token = request.cookies['session_token']
     access_token = headers_test['Authorization'].sub!('Bearer ', '')
 
-    header, payload, signature = split_token(access_token)
+    decoded_session_token = JWT.decode(session_token, JWT_RSA_PUBLIC_KEY, true, { algorithm: SESSION_TOKEN_ALGO })[0]
+    decoded_access_token = JWT.decode(access_token, session_token, true, { algorithm: ACCESS_TOKEN_ALGO })[0]
 
-    test = JWT.decode(session_token, JWT_RSA_PUBLIC_KEY, true, { algorithm: SESSION_TOKEN_ALGO })
-    puts test
-
-    if verify_hs256_signature("#{header}.#{payload}", signature, session_token)
-      _, payload_hash = decode_jwt(header, payload)
-
-      if Date.parse(payload_hash['ttl']) >= Date.today
-        [status, headers, response]
+    if decoded_session_token['user_name'] == decoded_access_token['user_name']
+      access_token_ttl = Date.parse(decoded_access_token['ttl'])
+      if access_token_ttl >= Date.today
+        @app.call(env)
       else
-        [401, { 'Content-Type' => 'application/json' }, [{ message: 'Token expired' }.to_json]]
+        [401, { 'Content-Type' => 'application/json' }, [{ message: 'Access token expired' }.to_json]]
       end
     else
-      [401, { 'Content-Type' => 'application/json' }, [{ message: 'Invalid token' }.to_json]]
+      [401, { 'Content-Type' => 'application/json' }, [{ message: 'Invalid access token' }.to_json]]
     end
+  rescue JWT::VerificationError, JWT::DecodeError => e
+    [401, { 'Content-Type' => 'application/json' }, [{ message: e.message }.to_json]]
   rescue StandardError => e
-    [400, { 'Content-Type' => 'application/json' }, [{ message: e.message }.to_json]]
+    [500, { 'Content-Type' => 'application/json' }, [{ message: e.message }.to_json]]
   end
 end
 
@@ -134,7 +101,7 @@ namespace '/ruby_kv/api/v1' do
         response.set_cookie('session_token', { value: session_token, expires: Date.today + 30, httpOnly: true })
       end
 
-      access_token_payload = { user: user_name, admin: admin, ttl: Date.today + 7, salt: SecureRandom.hex(12) }
+      access_token_payload = { user_name: user_name, admin: admin, ttl: Date.today + 7, salt: SecureRandom.hex(12) }
       response_body[:access_token] = JWT.encode(access_token_payload, session_token, ACCESS_TOKEN_ALGO)
     end
 
