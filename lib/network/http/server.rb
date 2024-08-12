@@ -34,7 +34,6 @@ class Authenticator
   def call(env)
     request = Rack::Request.new(env)
 
-
     return @app.call(env) if request.path == '/ruby_kv/api/v1/authenticate'
 
     headers_test = Hash[*env.select { |k, v| k.start_with? 'HTTP_' }
@@ -98,7 +97,15 @@ namespace '/ruby_kv/api/v1' do
         session_token_payload = { **request_body, admin: admin }
         session_token = JWT.encode(session_token_payload, JWT_RSA_PRIVATE_KEY, SESSION_TOKEN_ALGO)
 
-        response.set_cookie('session_token', { value: session_token, expires: Date.today + 30, httpOnly: true })
+        response.set_cookie(
+          'session_token',
+          {
+            value: session_token,
+            expires: Date.today + 30,
+            httponly: true,
+            samesite: 'Strict'
+          }
+        )
       end
 
       access_token_payload = { user_name: user_name, admin: admin, ttl: Date.today + 7, salt: SecureRandom.hex(12) }
