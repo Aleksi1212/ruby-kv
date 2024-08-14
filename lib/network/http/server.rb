@@ -36,14 +36,16 @@ class Authenticator
 
     return @app.call(env) if request.path == '/ruby_kv/api/v1/authenticate'
 
-    headers_test = Hash[*env.select { |k, v| k.start_with? 'HTTP_' }
-                            .collect { |k, v| [k.sub(/^HTTP_/, ''), v] }
-                            .collect { |k, v| [k.split('_').collect(&:capitalize).join('-'), v] }
-                            .sort
-                            .flatten]
+    content_type = { 'Content-Type' => 'application/json' }
+
+    headers = Hash[*env.select { |k, v| k.start_with? 'HTTP_' }
+                       .collect { |k, v| [k.sub(/^HTTP_/, ''), v] }
+                       .collect { |k, v| [k.split('_').collect(&:capitalize).join('-'), v] }
+                       .sort
+                       .flatten]
 
     session_token = request.cookies['session_token']
-    access_token = headers_test['Authorization'].sub!('Bearer ', '')
+    access_token = headers['Authorization'].sub!('Bearer ', '')
 
     decoded_session_token = JWT.decode(session_token, JWT_RSA_PUBLIC_KEY, true, { algorithm: SESSION_TOKEN_ALGO })[0]
     decoded_access_token = JWT.decode(access_token, session_token, true, { algorithm: ACCESS_TOKEN_ALGO })[0]
@@ -53,15 +55,15 @@ class Authenticator
       if access_token_ttl >= Date.today
         @app.call(env)
       else
-        [401, { 'Content-Type' => 'application/json' }, [{ message: 'Access token expired' }.to_json]]
+        [401, content_type, [{ message: 'Access token expired' }.to_json]]
       end
     else
-      [401, { 'Content-Type' => 'application/json' }, [{ message: 'Invalid access token' }.to_json]]
+      [401, content_type, [{ message: 'Invalid access token' }.to_json]]
     end
   rescue JWT::VerificationError, JWT::DecodeError => e
-    [401, { 'Content-Type' => 'application/json' }, [{ message: e.message }.to_json]]
+    [401, content_type, [{ message: e.message }.to_json]]
   rescue StandardError => e
-    [500, { 'Content-Type' => 'application/json' }, [{ message: e.message }.to_json]]
+    [500, content_type, [{ message: e.message }.to_json]]
   end
 end
 

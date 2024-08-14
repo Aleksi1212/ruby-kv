@@ -30,7 +30,7 @@ module RubyKV
 
     def get(key)
       key_struct = @key_dir[key]
-      return 'NOT FOUND' if key_struct.nil?
+      return '' if key_struct.nil?
 
       @db_fh.seek(key_struct[:write_pos])
       _, _, value = deserialize(@db_fh.read(key_struct[:log_size]))
