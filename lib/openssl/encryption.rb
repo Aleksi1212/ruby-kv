@@ -3,7 +3,7 @@
 require 'openssl'
 
 class String
-  def encrypt(key)
+  def encrypt(key = 'test_key')
     cipher = OpenSSL::Cipher.new('aes-256-cbc').encrypt
     cipher.key = Digest::MD5.hexdigest(key)
     s = cipher.update(self) + cipher.final
@@ -11,7 +11,7 @@ class String
     s.unpack1('H*').upcase
   end
 
-  def decrypt(key)
+  def decrypt(key = 'test_key')
     cipher = OpenSSL::Cipher.new('aes-256-cbc').decrypt
     cipher.key = Digest::MD5.hexdigest(key)
     s = [self].pack('H*').unpack('C*').pack('c*')

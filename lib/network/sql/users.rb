@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'sequel'
+require_relative '../../openssl/encryption'
 
 class Users
   def initialize(db_name = 'users.db')
@@ -16,7 +17,7 @@ class Users
   end
 
   def create_user(name, password, admin = 0)
-    @db[:users].insert(name: name, password: password, admin: admin)
+    @db[:users].insert(name: name, password: password.encrypt, admin: admin)
     'OK'
   rescue Sequel::UniqueConstraintViolation
     "User: #{name} already exists."
@@ -27,7 +28,7 @@ class Users
   end
 
   def get_user(name, password)
-    @db[:users].where(name: name).where(password: password).prepare(:first, :sa)
+    @db[:users].where(name: name).where(password: password.encrypt).prepare(:first, :sa)
     user_data = @db.call(:sa)
 
     {
